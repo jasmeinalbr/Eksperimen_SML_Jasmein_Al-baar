@@ -8,7 +8,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from joblib import dump
 
-# --- Custom function for feature engineering ---
+# Custom function for feature engineering
 def add_features(df):
     df = df.copy()
     df["TotalIncome"] = df["ApplicantIncome"] + df["CoapplicantIncome"]
