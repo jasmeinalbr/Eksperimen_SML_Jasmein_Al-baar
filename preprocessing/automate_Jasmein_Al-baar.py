@@ -7,6 +7,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from joblib import dump
+from sklearn.preprocessing import FunctionTransformer
 
 # Custom function for feature engineering
 def add_features(df):
@@ -50,25 +51,28 @@ def preprocess_data(input_path, target_column, save_path):
         ("encoder", OneHotEncoder(handle_unknown="ignore"))
     ])
 
-    # 9. ColumnTransformer gabungan
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num", numeric_transformer, numeric_features),
-            ("cat", categorical_transformer, categorical_features)
-        ]
-    )
+    # 9. Pipeline lengkap: feature engineering + preprocessing
+    full_pipeline = Pipeline(steps=[
+        ("feature_engineering", FunctionTransformer(add_features)),
+        ("preprocessor", ColumnTransformer(
+            transformers=[
+                ("num", numeric_transformer, numeric_features),
+                ("cat", categorical_transformer, categorical_features)
+            ]
+        ))
+    ])
 
     # 10. Train-test split
     X_train, X_test, y_train, y_test = train_test_split(
-        X_fe, y, test_size=0.2, random_state=42, stratify=y
+        X_raw, y, test_size=0.2, random_state=42, stratify=y
     )
 
     # 11. Fit-transform train, transform test
-    X_train_processed = preprocessor.fit_transform(X_train)
-    X_test_processed = preprocessor.transform(X_test)
+    X_train_processed = full_pipeline.fit_transform(X_train)
+    X_test_processed = full_pipeline.transform(X_test)
 
     # 12. Simpan pipeline
-    dump(preprocessor, save_path)
+    dump(full_pipeline, save_path)
     print(f"✅ Pipeline preprocessing berhasil disimpan ke: {save_path}")
 
     # 13. Simpan hasil preprocess ke CSV
